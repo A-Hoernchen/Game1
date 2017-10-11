@@ -11,7 +11,7 @@ namespace Game1
 	{
 		GraphicsDeviceManager graphics;
 		SpriteBatch spriteBatch;
-		//test
+		//test2
 		public Game1()
 		{
 			graphics = new GraphicsDeviceManager(this);
