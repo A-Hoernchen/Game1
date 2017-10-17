@@ -6,11 +6,18 @@ using System.Threading.Tasks;
 
 namespace Game1.Model
 {
-	public class Tile
-	{
-		public Tile()
-		{
+    /// <summary>
+    /// Repräsentiert eine Kachel einer Area.
+    /// </summary>
+    internal class Tile
+    {
+        /// <summary>
+        /// Gibt an ob diese Tile den Spieler an der Bewegung hindert.
+        /// </summary>
+        public bool Blocked { get; set; }
 
-		}
-	}
+        public Tile()
+        {
+        }
+    }
 }

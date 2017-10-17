@@ -6,16 +6,19 @@ using System.Threading.Tasks;
 
 namespace Game1.Model
 {
-	public class World
-	{
-		public List<Area> Areas
-		{
-			get;
-			private set;
-		}
-		public World()
-		{
-			Areas = new List<Area>();
-		}
-	}
+    /// <summary>
+    /// Repräsentiert eine Instanz der Welt.
+    /// </summary>
+    internal class World
+    {
+        /// <summary>
+        /// Auflistung aller Areas
+        /// </summary>
+        public List<Area> Areas { get; private set; }
+
+        public World()
+        {
+            Areas = new List<Area>();
+        }
+    }
 }

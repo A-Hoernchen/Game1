@@ -41,8 +41,23 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Components\InputComponent.cs" />
+    <Compile Include="Components\SceneComponent.cs" />
+    <Compile Include="Components\SimulationComponent.cs" />
     <Compile Include="Game1.cs" />
     <Compile Include="Model\Area.cs" />
+    <Compile Include="Model\Character.cs" />
+    <Compile Include="Model\Dealer.cs" />
+    <Compile Include="Model\Decard.cs" />
+    <Compile Include="Model\Diamant.cs" />
+    <Compile Include="Model\IAttackable.cs" />
+    <Compile Include="Model\IAttacker.cs" />
+    <Compile Include="Model\ICollidable.cs" />
+    <Compile Include="Model\IInteractable.cs" />
+    <Compile Include="Model\IInteractor.cs" />
+    <Compile Include="Model\Item.cs" />
+    <Compile Include="Model\Layer.cs" />
+    <Compile Include="Model\Player.cs" />
     <Compile Include="Model\Tile.cs" />
     <Compile Include="Model\World.cs" />
     <Compile Include="Program.cs" />
