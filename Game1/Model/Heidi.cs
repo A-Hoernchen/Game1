@@ -1,5 +1,4 @@
-﻿using Game1.Model;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,13 +7,13 @@ using System.Threading.Tasks;
 namespace Game1.Model
 {
     /// <summary>
-    /// Repräsentiert den Händler im Spiel.
+    /// Repräsentiert die Questgeberin Heidi.
     /// </summary>
-    internal class Dealer : Character, IInteractable
+    internal class Heidi : Character
     {
-        public Dealer()
+        public Heidi()
         {
-            Texture = "trader.png";
+            Texture = "heidi.png";
         }
     }
 }

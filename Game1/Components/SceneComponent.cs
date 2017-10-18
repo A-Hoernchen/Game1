@@ -1,8 +1,10 @@
 ﻿using Game1.Model;
+using Game1.Rendering;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,79 +18,169 @@ namespace Game1.Components
     {
         private readonly Game1 game;
 
+        private readonly Dictionary<string, Texture2D> tilesetTextures;
+
+        private readonly Dictionary<string, Texture2D> itemTextures;
+
+        private readonly Dictionary<Item, ItemRenderer> itemRenderer;
+
         private SpriteBatch spriteBatch;
 
-        private Texture2D pixel;
+        /// <summary>
+        /// Kamera-Einstellungen für diese Szene.
+        /// </summary>
+        public Camera Camera { get; private set; }
 
-        public SceneComponent(Game1 game) : base(game)
+        public SceneComponent(Game1 game)
+            : base(game)
         {
             this.game = game;
+            tilesetTextures = new Dictionary<string, Texture2D>();
+            itemTextures = new Dictionary<string, Texture2D>();
+            itemRenderer = new Dictionary<Item, ItemRenderer>();
         }
 
         protected override void LoadContent()
         {
             spriteBatch = new SpriteBatch(GraphicsDevice);
+            Camera = new Camera(GraphicsDevice.Viewport.Bounds.Size);
 
-            // Hilfspixel erstellen
-            pixel = new Texture2D(GraphicsDevice, 1, 1);
-            pixel.SetData(new[] { Color.White });
+            // Initiale Kameraposition (temporär)
+            Vector2 areaSize = new Vector2(
+                game.Simulation.World.Areas[0].Width,
+                game.Simulation.World.Areas[0].Height);
+            Camera.SetFocusExplizit(game.Simulation.Player.Position, areaSize);
+
+            // Erforderliche Texturen ermitteln
+            List<string> requiredTilesetTextures = new List<string>();
+            List<string> requiredItemTextures = new List<string>();
+            foreach (var area in game.Simulation.World.Areas)
+            {
+                // Tile-Textures
+                foreach (var tile in area.Tiles.Values)
+                    if (!requiredTilesetTextures.Contains(tile.Texture))
+                        requiredTilesetTextures.Add(tile.Texture);
+
+                // Item Textures
+                foreach (var item in area.Items)
+                    if (!string.IsNullOrEmpty(item.Texture) && !requiredItemTextures.Contains(item.Texture))
+                        requiredItemTextures.Add(item.Texture);
+            }
+
+            // Erforderlichen Tileset-Texturen direkt aus dem Stream laden
+            string mapPath = Path.Combine(Environment.CurrentDirectory, "Maps");
+            foreach (var textureName in requiredTilesetTextures)
+            {
+                using (Stream stream = File.OpenRead(mapPath + "\\" + textureName))
+                {
+                    Texture2D texture = Texture2D.FromStream(GraphicsDevice, stream);
+                    tilesetTextures.Add(textureName, texture);
+                }
+            }
+
+            // Erforderliche Item-Texturen direkt aus dem Stream laden
+            mapPath = Path.Combine(Environment.CurrentDirectory, "Content");
+            foreach (var textureName in requiredItemTextures)
+            {
+                using (Stream stream = File.OpenRead(mapPath + "\\" + textureName))
+                {
+                    Texture2D texture = Texture2D.FromStream(GraphicsDevice, stream);
+                    itemTextures.Add(textureName, texture);
+                }
+            }
+        }
+
+        public override void Update(GameTime gameTime)
+        {
+            // Platziert den Kamerafokus auf den Spieler.
+            Vector2 areaSize = new Vector2(
+                game.Simulation.World.Areas[0].Width,
+                game.Simulation.World.Areas[0].Height);
+            Camera.SetFocus(game.Simulation.Player.Position, areaSize);
         }
 
         public override void Draw(GameTime gameTime)
         {
-            // Bildschirm leeren
-            GraphicsDevice.Clear(Color.CornflowerBlue);
-
             // Erste Area referenzieren (versuchsweise)
             Area area = game.Simulation.World.Areas[0];
 
-            // Skalierungsfaktor für eine Vollbild-Darstellung der Area ausrechnen
-            float scaleX = (GraphicsDevice.Viewport.Width - 20) / area.Width;
-            float scaleY = (GraphicsDevice.Viewport.Height - 20) / area.Height;
+            // Bildschirm leeren
+            GraphicsDevice.Clear(area.Background);
 
             spriteBatch.Begin();
 
-            // Ausgabe der Spielfeld-Zellen
+            // Berechnet den Render-Offset mit Hilfe der Kamera-Einstellungen
+            Point offset = (Camera.Offset * Camera.Scale).ToPoint();
+
+            // Alle Layer der Render-Reihenfolge nach durchlaufen
+            for (int l = 0; l < area.Layers.Length; l++)
+            {
+                RenderLayer(area, area.Layers[l], offset);
+                if (l == 4)
+                    RenderItems(area, offset, gameTime);
+            }
+
+            spriteBatch.End();
+        }
+
+        /// <summary>
+        /// Rendert einen Layer der aktuellen Szene
+        /// </summary>
+        private void RenderLayer(Area area, Layer layer, Point offset)
+        {
+            // TODO: Nur den sichtbaren Bereich rendern
             for (int x = 0; x < area.Width; x++)
             {
                 for (int y = 0; y < area.Height; y++)
                 {
-                    // Ermitteln, ob diese Zelle blockiert
-                    bool blocked = false;
-                    for (int l = 0; l < area.Layers.Length; l++)
-                        blocked |= area.Layers[l].Tiles[x, y].Blocked;
+                    // Prüfen, ob diese Zelle ein Tile enthält
+                    int tileId = layer.Tiles[x, y];
+                    if (tileId == 0)
+                        continue;
 
-                    int offsetX = (int)(x * scaleX) + 10;
-                    int offsetY = (int)(y * scaleY) + 10;
+                    // Tile ermitteln
+                    Tile tile = area.Tiles[tileId];
+                    Texture2D texture = tilesetTextures[tile.Texture];
 
-                    // Ausgabefarbe aufgrund des Block-Status ermitteln
-                    Color color = Color.DarkGreen;
-                    if (blocked)
-                        color = Color.DarkRed;
+                    // Position ermitteln
+                    int offsetX = (int)(x * Camera.Scale) - offset.X;
+                    int offsetY = (int)(y * Camera.Scale) - offset.Y;
 
-                    // Grafische Ausgabe der Zelle
-                    spriteBatch.Draw(pixel, new Rectangle(offsetX, offsetY, (int)scaleX, (int)scaleY), color);
-                    spriteBatch.Draw(pixel, new Rectangle(offsetX, offsetY, 1, (int)scaleY), Color.Black);
-                    spriteBatch.Draw(pixel, new Rectangle(offsetX, offsetY, (int)scaleX, 1), Color.Black);
+                    // Zelle mit der Standard-Textur (Gras) ausmalen
+                    spriteBatch.Draw(texture, new Rectangle(offsetX, offsetY, (int)Camera.Scale, (int)Camera.Scale), tile.SourceRectangle, Color.White);
                 }
             }
+        }
 
-            // Ausgabe der Spielfeld-Items
-            foreach (var item in area.Items)
+        /// <summary>
+        /// Rendert die Spielelemente der aktuellen Szene
+        /// </summary>
+        private void RenderItems(Area area, Point offset, GameTime gameTime)
+        {
+            // Items von hinten nach vorne rendern
+            foreach (var item in area.Items.OrderBy(i => i.Position.Y))
             {
-                // Ermittlung der Item-Farbe.
-                Color color = Color.Yellow;
-                if (item is Player)
-                    color = Color.Red;
+                // Renderer ermitteln und ggf. neu erzeugen
+                ItemRenderer renderer;
+                if (!itemRenderer.TryGetValue(item, out renderer))
+                {
+                    // ACHTUNG: Hier können potentiell neue Items nachträglich hinzu kommen zu denen die Textur noch fehlt
+                    // Das muss geprüft und ggf nachgeladen werden.
+                    Texture2D texture = itemTextures[item.Texture];
 
-                // Positionsermittlung und Ausgabe des Spielelements.
-                int posX = (int)((item.Position.X - item.Radius) * scaleX) + 10;
-                int posY = (int)((item.Position.Y - item.Radius) * scaleY) + 10;
-                int size = (int)((item.Radius * 2) * scaleX);
-                spriteBatch.Draw(pixel, new Rectangle(posX, posY, size, size), color);
+                    if (item is Character)
+                        renderer = new CharacterRenderer(item as Character, Camera, texture);
+                    else
+                        renderer = new SimpleItemRenderer(item, Camera, texture);
+
+                    itemRenderer.Add(item, renderer);
+                }
+
+                // Item rendern
+                renderer.Draw(spriteBatch, offset, gameTime);
             }
 
-            spriteBatch.End();
+            // TODO: Nicht mehr verwendete Renderer entfernen
         }
     }
 }

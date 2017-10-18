@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,16 @@ namespace Game1.Model
     /// </summary>
     internal class Area
     {
+        /// <summary>
+        /// Name des Bereichs.
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
+        /// Hintergrundfarbe des Bereiches.
+        /// </summary>
+        public Color Background { get; set; }
+
         /// <summary>
         /// Breite des Spielbereichs.
         /// </summary>
@@ -31,6 +42,11 @@ namespace Game1.Model
         /// </summary>
         public List<Item> Items { get; private set; }
 
+        /// <summary>
+        /// Zentrales Repository für Zellentemplates (Tiles)
+        /// </summary>
+        public Dictionary<int, Tile> Tiles { get; private set; }
+
         public Area(int layers, int width, int height)
         {
             // Sicherheitsprüfungen
@@ -49,6 +65,9 @@ namespace Game1.Model
 
             // Leere Liste der Spielelemente.
             Items = new List<Item>();
+
+            // Leere Liste von Tiles erstellen.
+            Tiles = new Dictionary<int, Tile>();
         }
 
         /// <summary>
@@ -67,8 +86,14 @@ namespace Game1.Model
             // Schleife über alle Layer um einen Blocker zu finden.
             for (int l = 0; l < Layers.Length; l++)
             {
+                int tileId = Layers[l].Tiles[x, y];
+                if (tileId == 0)
+                    continue;
+
+                Tile tile = Tiles[tileId];
+
                 // Blocker gefunden -> Zelle ist blockiert
-                if (Layers[l].Tiles[x, y].Blocked)
+                if (tile.Blocked)
                     return true;
             }
 

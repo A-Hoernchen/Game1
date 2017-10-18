@@ -14,6 +14,21 @@
     <FileAlignment>512</FileAlignment>
     <MonoGamePlatform>Windows</MonoGamePlatform>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -41,15 +56,19 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Components\HudComponent.cs" />
     <Compile Include="Components\InputComponent.cs" />
+    <Compile Include="Components\MusicComponent.cs" />
     <Compile Include="Components\SceneComponent.cs" />
     <Compile Include="Components\SimulationComponent.cs" />
+    <Compile Include="Components\SoundComponent.cs" />
     <Compile Include="Game1.cs" />
     <Compile Include="Model\Area.cs" />
     <Compile Include="Model\Character.cs" />
     <Compile Include="Model\Dealer.cs" />
     <Compile Include="Model\Decard.cs" />
     <Compile Include="Model\Diamant.cs" />
+    <Compile Include="Model\Heidi.cs" />
     <Compile Include="Model\IAttackable.cs" />
     <Compile Include="Model\IAttacker.cs" />
     <Compile Include="Model\ICollidable.cs" />
@@ -57,25 +76,65 @@
     <Compile Include="Model\IInteractor.cs" />
     <Compile Include="Model\Item.cs" />
     <Compile Include="Model\Layer.cs" />
+    <Compile Include="Model\Orc.cs" />
     <Compile Include="Model\Player.cs" />
     <Compile Include="Model\Tile.cs" />
     <Compile Include="Model\World.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Rendering\Camera.cs" />
+    <Compile Include="Rendering\CharacterRenderer.cs" />
+    <Compile Include="Rendering\ItemRenderer.cs" />
+    <Compile Include="Rendering\SimpleItemRenderer.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="MonoGame.Framework">
       <HintPath>$(MonoGameInstallDirectory)\MonoGame\v3.0\Assemblies\Windows\MonoGame.Framework.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL" />
     <Reference Include="System" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Content\char.png" />
+    <Content Include="Content\click.wav" />
+    <Content Include="Content\clock.wav" />
+    <Content Include="Content\coin_silver.png" />
+    <Content Include="Content\decard.png" />
+    <Content Include="Content\hearts.png" />
+    <Content Include="Content\heidi.png" />
+    <Content Include="Content\houseloop.wav" />
+    <Content Include="Content\menuloop.wav" />
+    <Content Include="Content\orc.png" />
+    <Content Include="Content\townloop.wav" />
+    <Content Include="Content\trader.png" />
+    <Content Include="Content\woodloop.wav" />
     <Content Include="Icon.ico" />
+    <Content Include="Maps\landscape.png" />
+    <Content Include="Maps\town.png" />
+    <Content Include="Maps\trees_plants_rocks.png" />
   </ItemGroup>
   <ItemGroup>
     <MonoGameContentReference Include="Content\Content.mgcb" />
     <None Include="app.manifest" />
+    <None Include="Content\click.xnb" />
+    <None Include="Content\clock.xnb" />
+    <None Include="Content\houseloop.xnb" />
+    <None Include="Content\HudFont.spritefont" />
+    <None Include="Content\HudFont.xnb" />
+    <None Include="Content\menuloop.xnb" />
+    <None Include="Content\townloop.xnb" />
+    <None Include="Content\woodloop.xnb" />
+    <None Include="Maps\shop.json" />
+    <None Include="Maps\town.json" />
+    <None Include="Maps\wood.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath)\MonoGame\v3.0\MonoGame.Content.Builder.targets" />

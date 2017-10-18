@@ -1,5 +1,4 @@
-﻿using Game1.Model;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,9 +7,9 @@ using System.Threading.Tasks;
 namespace Game1.Model
 {
     /// <summary>
-    /// Repräsentiert einen Spieler-Charakter.
+    /// Repräsentiert einen Orc.
     /// </summary>
-    internal class Player : Character, IAttackable, IAttacker, IInteractor
+    internal class Orc : Character, IAttackable, IAttacker
     {
         /// <summary>
         /// Maximale Anzahl Trefferpunkte im gesunden Zustand.
@@ -37,26 +36,14 @@ namespace Game1.Model
         /// </summary>
         public int AttackValue { get; set; }
 
-        /// <summary>
-        /// Interne auflistung aller Items im Interaktionsradius.
-        /// </summary>
-        public ICollection<Item> InteractableItems { get; private set; }
-
-        /// <summary>
-        /// Interaktionsradius in dem interagiert werden kann.
-        /// </summary>
-        public float InteractionRange { get; set; }
-
-        public Player()
+        public Orc()
         {
             AttackableItems = new List<Item>();
-            InteractableItems = new List<Item>();
-            MaxHitpoints = 4;
-            Hitpoints = 4;
-            AttackRange = 0.5f;
+            MaxHitpoints = 2;
+            Hitpoints = 2;
+            AttackRange = 0.3f;
             AttackValue = 1;
-            InteractionRange = 0.5f;
-            Texture = "char.png";
+            Texture = "orc.png";
         }
     }
 }

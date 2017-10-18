@@ -13,6 +13,7 @@ namespace Game1.Model
     {
         public Decard()
         {
+            Texture = "decard.png";
         }
     }
 }
