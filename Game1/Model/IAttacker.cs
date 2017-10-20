@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Game1.Model
 {
@@ -14,7 +11,7 @@ namespace Game1.Model
         /// <summary>
         /// Intern geführte Liste aller angreifbaren Elemente in der Nähe.
         /// </summary>
-        ICollection<Item> AttackableItems { get; }
+        ICollection<IAttackable> AttackableItems { get; }
 
         /// <summary>
         /// Angriffsradius in dem Schaden ausgeteilt wird.
@@ -25,5 +22,21 @@ namespace Game1.Model
         /// Schaden der pro Angriff verursacht wird.
         /// </summary>
         int AttackValue { get; }
+
+        /// <summary>
+        /// Gibt die Zeitspanne an, die der Character zur Erholung von einem Schlag benötigt.
+        /// </summary>
+        TimeSpan TotalRecovery { get; }
+
+        /// <summary>
+        /// Gibt die noch verbleibende Erholungszeit an, bevor erneut geschlagen werden kann.
+        /// </summary>
+        TimeSpan Recovery { get; set; }
+
+        /// <summary>
+        /// Interner Flag um bevorstehenden Angriff zu signalisieren.
+        /// </summary>
+        bool AttackSignal { get; set; }
     }
 }
+

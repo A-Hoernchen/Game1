@@ -21,8 +21,8 @@ namespace Game1.Rendering
 
         private int animationRow;
 
-        public CharacterRenderer(Character character, Camera camera, Texture2D texture)
-            : base(character, camera, texture, new Point(64, 64), 50, new Point(32, 55), 2f)
+        public CharacterRenderer(Character character, Camera camera, Texture2D texture, SpriteFont font)
+            : base(character, camera, texture, font, new Point(64, 64), 50, new Point(32, 55), 2f)
         {
             this.character = character;
             animation = Animation.Idle;
@@ -37,7 +37,8 @@ namespace Game1.Rendering
         /// <param name="spriteBatch">SpriteBatch Referenz</param>
         /// <param name="offset">Der Offset der View</param>
         /// <param name="gameTime">Aktuelle Game Time</param>
-        public override void Draw(SpriteBatch spriteBatch, Point offset, GameTime gameTime)
+        /// <param name="highlight">Soll das Item hervorgehoben werden?</param> 
+        public override void Draw(SpriteBatch spriteBatch, Point offset, GameTime gameTime, bool highlight)
         {
             // kommende Animation ermitteln
             Animation nextAnimation = Animation.Idle;
@@ -72,7 +73,11 @@ namespace Game1.Rendering
                 }
             }
 
-            // TODO: Schlag-Animation
+            // Schlag-Animation
+            if (character is IAttacker && (character as IAttacker).Recovery > TimeSpan.Zero)
+            {
+                nextAnimation = Animation.Hit;
+            }
 
             // Für den Fall, dass dieser Character Tod ist
             if (character is IAttackable && (character as IAttackable).Hitpoints <= 0)
@@ -94,7 +99,7 @@ namespace Game1.Rendering
                         break;
                     case Animation.Die:
                         frameCount = 6;
-                        animationRow = 0;
+                        animationRow = 20;
                         break;
                     case Animation.Idle:
                         frameCount = 1;
@@ -124,10 +129,13 @@ namespace Game1.Rendering
                     break;
                 case Animation.Hit:
                     // TODO: Animationsverlauf definieren
+                    IAttacker attacker = Item as IAttacker;
+                    double animationPosition = 1d - (attacker.Recovery.TotalMilliseconds / attacker.TotalRecovery.TotalMilliseconds);
+                    frame = (int)(frameCount * animationPosition);
                     break;
                 case Animation.Die:
                     // Animation stoppt mit dem letzten Frame
-                    AnimationTime += (int)gameTime.ElapsedGameTime.TotalMilliseconds;
+                    AnimationTime += (int)gameTime.ElapsedGameTime.TotalMilliseconds / 2;
                     frame = Math.Min((AnimationTime / FrameTime), frameCount - 1);
                     break;
             }
@@ -152,6 +160,16 @@ namespace Game1.Rendering
                 (int)(FrameSize.Y * scale.Y));
 
             spriteBatch.Draw(Texture, destinationRectangle, sourceRectangle, Color.White);
+
+            // Highlight
+            if (highlight && !string.IsNullOrEmpty(Item.Name))
+            {
+                Vector2 textSize = Font.MeasureString(Item.Name);
+                Vector2 location = new Vector2(
+                    posX - (int)(textSize.X / 2), 
+                    posY - (int)(ItemOffset.Y * scale.Y));
+                spriteBatch.DrawString(Font, Item.Name, location, Color.White);
+            }
         }
     }
 

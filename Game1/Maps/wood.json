@@ -77,12 +77,84 @@
          "width":30,
          "x":0,
          "y":0
+        }, 
+        {
+         "draworder":"topdown",
+         "height":30,
+         "name":"Object",
+         "objects":[
+                {
+                 "height":128,
+                 "id":8,
+                 "name":"town",
+                 "properties":
+                    {
+
+                    },
+                 "rotation":0,
+                 "type":"Portal",
+                 "visible":true,
+                 "width":32,
+                 "x":928,
+                 "y":512
+                }, 
+                {
+                 "height":32,
+                 "id":9,
+                 "name":"orc",
+                 "properties":
+                    {
+
+                    },
+                 "rotation":0,
+                 "type":"Item",
+                 "visible":true,
+                 "width":32,
+                 "x":608,
+                 "y":544
+                }, 
+                {
+                 "height":32,
+                 "id":10,
+                 "name":"orc",
+                 "properties":
+                    {
+
+                    },
+                 "rotation":0,
+                 "type":"Item",
+                 "visible":true,
+                 "width":32,
+                 "x":672,
+                 "y":416
+                }, 
+                {
+                 "height":32,
+                 "id":12,
+                 "name":"goldencoin",
+                 "properties":
+                    {
+
+                    },
+                 "rotation":0,
+                 "type":"Item",
+                 "visible":true,
+                 "width":32,
+                 "x":352,
+                 "y":544
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "width":30,
+         "x":0,
+         "y":0
         }],
- "nextobjectid":8,
+ "nextobjectid":13,
  "orientation":"orthogonal",
  "properties":
     {
-
+     "Song":"wood"
     },
  "renderorder":"left-down",
  "tileheight":32,

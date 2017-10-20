@@ -1,9 +1,6 @@
-﻿using Microsoft.Xna.Framework;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.Xna.Framework;
 
 namespace Game1.Model
 {
@@ -16,6 +13,11 @@ namespace Game1.Model
         /// Name des Bereichs.
         /// </summary>
         public string Name { get; set; }
+
+        /// <summary>
+        /// Gibt den Song für diese Area an.
+        /// </summary>
+        public string Song { get; set; }
 
         /// <summary>
         /// Hintergrundfarbe des Bereiches.
@@ -38,14 +40,24 @@ namespace Game1.Model
         public Layer[] Layers { get; private set; }
 
         /// <summary>
+        /// Auflistung der Portale zu anderen Areas.
+        /// </summary>
+        public List<Portal> Portals { get; private set; }
+
+        /// <summary>
         /// Auflistung aller enthaltener Items
         /// </summary>
         public List<Item> Items { get; private set; }
 
         /// <summary>
+        /// Auflistung potentieller Startpunkte für den Spieler
+        /// </summary>
+        public List<Vector2> Startpoints { get; private set; }
+
+        /// <summary>
         /// Zentrales Repository für Zellentemplates (Tiles)
         /// </summary>
-        public Dictionary<int, Tile> Tiles { get; private set; }
+        public Dictionary<int,Tile> Tiles { get; private set; }
 
         public Area(int layers, int width, int height)
         {
@@ -66,8 +78,14 @@ namespace Game1.Model
             // Leere Liste der Spielelemente.
             Items = new List<Item>();
 
+            // Leere Liste der Portale erstellen
+            Portals = new List<Portal>();
+
             // Leere Liste von Tiles erstellen.
             Tiles = new Dictionary<int, Tile>();
+
+            // Leere Liste von Startpunkten.
+            Startpoints = new List<Vector2>();
         }
 
         /// <summary>
@@ -102,3 +120,4 @@ namespace Game1.Model
         }
     }
 }
+

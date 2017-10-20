@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Game1.Components;
 
 namespace Game1.Model
 {
@@ -19,6 +16,12 @@ namespace Game1.Model
         /// <summary>
         /// Anzahl verfügbarer Trefferpunkte.
         /// </summary>
-        int Hitpoints { get; }
+        int Hitpoints { get; set; }
+
+        /// <summary>
+        /// Aufruf bei ankommenden Treffern.
+        /// </summary>
+        Action<SimulationComponent, IAttacker, IAttackable> OnHit { get; }
     }
 }
+

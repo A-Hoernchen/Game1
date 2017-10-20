@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Game1.Components;
 
 namespace Game1.Model
 {
@@ -24,7 +22,7 @@ namespace Game1.Model
         /// <summary>
         /// Intern geführte Liste aller angreifbaren Elemente in der Nähe.
         /// </summary>
-        public ICollection<Item> AttackableItems { get; private set; }
+        public ICollection<IAttackable> AttackableItems { get; private set; }
 
         /// <summary>
         /// Angriffsradius in dem Schaden ausgeteilt wird.
@@ -36,14 +34,39 @@ namespace Game1.Model
         /// </summary>
         public int AttackValue { get; set; }
 
-        public Orc()
+        /// <summary>
+        /// Gibt die Zeitspanne an, die der Character zur Erholung von einem Schlag benötigt.
+        /// </summary>
+        public TimeSpan TotalRecovery { get; set; }
+
+        /// <summary>
+        /// Gibt die noch verbleibende Erholungszeit an, bevor erneut geschlagen werden kann.
+        /// </summary>
+        public TimeSpan Recovery { get; set; }
+
+        /// <summary>
+        /// Interner Flag um bevorstehenden Angriff zu signalisieren.
+        /// </summary>
+        public bool AttackSignal { get; set; }
+
+        /// <summary>
+        /// Aufruf bei ankommenden Treffern.
+        /// </summary>
+        public Action<SimulationComponent, IAttacker, IAttackable> OnHit { get; set; }
+
+        public Orc(int id) : base(id)
         {
-            AttackableItems = new List<Item>();
+            AttackableItems = new List<IAttackable>();
             MaxHitpoints = 2;
             Hitpoints = 2;
-            AttackRange = 0.3f;
+            AttackRange = 0.8f;
             AttackValue = 1;
+            TotalRecovery = TimeSpan.FromSeconds(0.6);
             Texture = "orc.png";
+            Name = "Orc";
+            Icon = "orcicon.png";
+            Ai = new AggressiveAi(this, 4f);
         }
     }
 }
+

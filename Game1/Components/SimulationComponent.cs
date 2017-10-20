@@ -1,12 +1,11 @@
-﻿using Game1.Model;
-using Microsoft.Xna.Framework;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.Xna.Framework;
+using Game1.Model;
+using System.IO;
+using Newtonsoft.Json;
+using System.Collections.Generic;
+using Game1.Screens;
 
 namespace Game1.Components
 {
@@ -20,56 +19,117 @@ namespace Game1.Components
 
         private readonly Game1 game;
 
+        private readonly Random rand = new Random();
+
         /// <summary>
         /// Referenz auf das zentrale Spielmodell.
         /// </summary>
         public World World { get; private set; }
 
         /// <summary>
-        /// Referenz auf den aktuellen Spieler.
+        /// Modus in dem die Simulation läuft
         /// </summary>
-        public Player Player { get; private set; }
+        /// <value>The mode.</value>
+        public SimulationMode Mode { get; private set; }
 
         public SimulationComponent(Game1 game)
             : base(game)
         {
             this.game = game;
-
-            // Zu Beginn eine neue Spielwelt erzeugen.
-            NewGame();
         }
 
-        public void NewGame()
+        /// <summary>
+        /// Startet ein neues Spiel
+        /// </summary>
+        /// <param name="mode">Simulationsmodus</param>
+        public void NewGame(SimulationMode mode)
         {
             World = new World();
+            Mode = mode;
+            int nextId = World.NextId;
+            World.Areas.AddRange(MapLoader.LoadAll(ref nextId));
+            World.NextId = nextId;
 
-            Area town = LoadFromJson("town");
-            World.Areas.Add(town);
+            // Quests erstellen
+            Quest quest = new Quest()
+            {
+                Name = "Heidis Quest",
+            };
+            World.Quests.Add(quest);
 
-            // Den Spieler einfügen.
-            Player = new Player() { Position = new Vector2(15, 10) };
-            town.Items.Add(Player);
+            quest.QuestProgresses.Add(new QuestProgress() { Id = "search", Description = "Gehe auf die Suche nach der goldenen Muenze" });
+            quest.QuestProgresses.Add(new QuestProgress() { Id = "return", Description = "Bring die Muenze zurueck" });
+            quest.QuestProgresses.Add(new QuestProgress() { Id = "success", Description = "Das Dorf wird dir ewig dankbar sein" });
+            quest.QuestProgresses.Add(new QuestProgress() { Id = "fail", Description = "Die Muenze ist fuer immer verloren" });
+        }
 
-            // Einen Diamanten einfügen.
-            Diamant diamant = new Diamant() { Position = new Vector2(10, 10) };
-            town.Items.Add(diamant);
+        /// <summary>
+        /// Beendet das aktuelle Spiel.
+        /// </summary>
+        public void CloseGame()
+        {
+            World = null;
+            Mode = SimulationMode.None;
+        }
+
+        /// <summary>
+        /// Fügt den Player an eine der Startstellen ein
+        /// </summary>
+        /// <returns>Area in die der Spieler eingefügt wurde</returns>
+        /// <param name="player">Player-Instanz</param>
+        public void InsertPlayer(Player player)
+        {
+            Vector2 x = new Vector2((float)rand.NextDouble() - 0.5f, (float)rand.NextDouble() - 0.5f);
+
+            // Den ersten verfügbaren Startplatz finden und nutzen
+            Area target = World.Areas.Where(a => a.Startpoints.Count > 0).First();
+            player.Position = target.Startpoints[0] + x;
+            target.Items.Add(player);
+        }
+
+        /// <summary>
+        /// Entfernt den angegebenen Spieler wieder aus dem vorhandenen Spiel.
+        /// </summary>
+        /// <param name="player">Zu entfernenden Spieler</param>
+        public void RemovePlayer(Player player)
+        {
+            if (World == null)
+                return;
+            
+            foreach (var area in World.Areas)
+            {
+                if (area.Items.Contains(player))
+                {
+                    area.Items.Remove(player);
+                    break;
+                }
+            }
         }
 
         public override void Update(GameTime gameTime)
         {
-            #region Player Input
+            // Nur wenn Komponente aktiviert wurde.
+            if (!Enabled)
+                return;
 
-            Player.Velocity = game.Input.Movement * Player.MaxSpeed;
+            // Nur berechnen, falls eine Welt aktiv ist.
+            if (World == null)
+                return;
 
-            #endregion
-
-            #region Character Movement
-
+            List<Action> transfers = new List<Action>();
             foreach (var area in World.Areas)
             {
                 // Schleife über alle sich aktiv bewegenden Spiel-Elemente
-                foreach (var character in area.Items.OfType<Character>())
+                foreach (var character in area.Items.OfType<Character>().ToArray())
                 {
+                    // Tote Charactere ignorieren
+                    if (character is IAttackable && (character as IAttackable).Hitpoints <= 0)
+                        continue;
+
+                    // KI Update
+                    if (character.Ai != null && Mode != SimulationMode.Client)
+                        character.Ai.Update(area, gameTime);
+                    
                     // Neuberechnung der Character-Position.
                     character.move += character.Velocity * (float)gameTime.ElapsedGameTime.TotalSeconds;
 
@@ -79,6 +139,11 @@ namespace Game1.Components
                     {
                         attacker = (IAttacker)character;
                         attacker.AttackableItems.Clear();
+
+                        // Recovery-Time aktualisieren
+                        attacker.Recovery -= gameTime.ElapsedGameTime;
+                        if (attacker.Recovery < TimeSpan.Zero)
+                            attacker.Recovery = TimeSpan.Zero;
                     }
 
                     // Interactor identifizieren
@@ -104,7 +169,7 @@ namespace Game1.Components
                             item is IAttackable &&
                             distance.Length() - attacker.AttackRange - item.Radius < 0f)
                         {
-                            attacker.AttackableItems.Add(item);
+                            attacker.AttackableItems.Add(item as IAttackable);
                         }
 
                         // Ermittlung der interagierbaren Items.
@@ -112,7 +177,7 @@ namespace Game1.Components
                             item is IInteractable &&
                             distance.Length() - interactor.InteractionRange - item.Radius < 0f)
                         {
-                            interactor.InteractableItems.Add(item);
+                            interactor.InteractableItems.Add(item as IInteractable);
                         }
 
                         // Überschneidung berechnen & darauf reagieren
@@ -137,15 +202,46 @@ namespace Game1.Components
                                 character.move -= resolution * (item.Mass / totalMass);
                                 item.move += resolution * (character.Mass / totalMass);
                             }
+
+                            // Kombination aus Collectable und Iventory
+                            if (item is ICollectable && character is IInventory)
+                            {
+                                ICollectable collectable = item as ICollectable;
+
+                                //  -> Character sammelt Item ein
+                                if (Mode != SimulationMode.Client)
+                                {
+                                    transfers.Add(() =>
+                                        {
+                                            if (area.Items.Contains(item))
+                                                area.Items.Remove(item);
+                                        
+                                            IInventory inventory = character as IInventory;
+                                            if (!inventory.Inventory.Contains(item))
+                                            {
+                                                inventory.Inventory.Add(item);
+                                                item.Position = Vector2.Zero;
+                                            }
+                                        });
+                                }
+
+                                // Event aufrufen
+                                if (collectable.OnCollect != null)
+                                    collectable.OnCollect(this, item);
+                            }
                         }
                     }
                 }
 
                 // Kollision mit blockierten Zellen
-                foreach (var item in area.Items)
+                foreach (var item in area.Items.ToArray())
                 {
                     bool collision = false;
                     int loops = 0;
+
+                    // Standard-Update für das Item
+                    if (item.Update != null)
+                        item.Update(game, area, item, gameTime);
 
                     do
                     {
@@ -231,189 +327,204 @@ namespace Game1.Components
                         }
                         loops++;
                     }
-                    while (collision && loops < 2);
+                    while(collision && loops < 2);
 
                     // Finaler Move-Vektor auf die Position anwenden.
                     item.Position += item.move;
                     item.move = Vector2.Zero;
 
-                }
-            }
-
-            #endregion
-
-            base.Update(gameTime);
-        }
-
-        private Area LoadFromJson(string name)
-        {
-            string rootPath = Path.Combine(Environment.CurrentDirectory, "Maps");
-            using (Stream stream = File.OpenRead(rootPath + "\\" + name + ".json"))
-            {
-                using (StreamReader sr = new StreamReader(stream))
-                {
-                    // json Datei auslesen
-                    string json = sr.ReadToEnd();
-
-                    // Deserialisieren
-                    FileArea result = JsonConvert.DeserializeObject<FileArea>(json);
-
-                    // Neue Area öffnen und mit den Root-Daten füllen
-                    Area area = new Area(result.layers.Length, result.width, result.height);
-                    area.Name = name;
-
-                    // Hintergrundfarbe interpretieren
-                    area.Background = new Color(128, 128, 128);
-                    if (!string.IsNullOrEmpty(result.backgroundcolor))
+                    // Portal anwenden (nur Player)
+                    if (area.Portals != null && item is Player)
                     {
-                        // Hexwerte als Farbwert parsen
-                        area.Background = new Color(
-                            Convert.ToInt32(result.backgroundcolor.Substring(1, 2), 16),
-                            Convert.ToInt32(result.backgroundcolor.Substring(3, 2), 16),
-                            Convert.ToInt32(result.backgroundcolor.Substring(5, 2), 16));
+                        Player player = item as Player;
+                        bool inPortal = false;
+
+                        foreach (var portal in area.Portals)
+                        {
+                            if (item.Position.X > portal.Box.Left &&
+                                item.Position.X <= portal.Box.Right &&
+                                item.Position.Y > portal.Box.Top &&
+                                item.Position.Y <= portal.Box.Bottom)
+                            {
+                                inPortal = true;
+                                if (player.InPortal)
+                                    continue;
+
+                                // Ziel-Area und Portal finden
+                                Area destinationArea = World.Areas.First(a => a.Name.Equals(portal.DestinationArea));
+                                Portal destinationPortal = destinationArea.Portals.First(p => p.DestinationArea.Equals(area.Name));
+
+                                // Neue Position des Spielers finden
+                                Vector2 position = new Vector2(
+                                                       destinationPortal.Box.X + (destinationPortal.Box.Width / 2f), 
+                                                       destinationPortal.Box.Y + (destinationPortal.Box.Height / 2f));
+
+                                // Transfer in andere Area vorbereiten
+                                if (Mode != SimulationMode.Client)
+                                {
+                                    transfers.Add(() =>
+                                        {
+                                            if (area.Items.Contains(item))
+                                                area.Items.Remove(item);
+
+                                            if (!destinationArea.Items.Contains(item))
+                                            {
+                                                destinationArea.Items.Add(item);
+                                                item.Position = position;
+                                            }
+                                        });
+                                }
+                            }
+                        }
+
+                        player.InPortal = inPortal;
                     }
 
-                    // Tiles zusammen suchen
-                    for (int i = 0; i < result.tilesets.Length; i++)
+                    // Interaktionen durchführen
+                    if (item is IInteractor)
                     {
-                        FileTileset tileset = result.tilesets[i];
-
-                        int start = tileset.firstgid;
-                        int perRow = tileset.imagewidth / tileset.tilewidth;
-                        int width = tileset.tilewidth;
-
-                        for (int j = 0; j < tileset.tilecount; j++)
+                        IInteractor interactor = item as IInteractor;
+                        if (interactor.InteractSignal)
                         {
-                            int x = j % perRow;
-                            int y = j / perRow;
-
-                            // Block-Status ermitteln
-                            bool block = false;
-                            if (tileset.tileproperties != null)
+                            // Alle Items in der Nähe aufrufen
+                            foreach (var interactable in interactor.InteractableItems)
                             {
-                                FileTileProperty property;
-                                if (tileset.tileproperties.TryGetValue(j, out property))
-                                    block = property.Block;
+                                if (interactable.OnInteract != null)
+                                    interactable.OnInteract(this, interactor, interactable);
+                            }
+                        }
+                        interactor.InteractSignal = false;
+                    }
+
+                    // Angriff durchführen
+                    if (item is IAttacker)
+                    {
+                        IAttacker attacker = item as IAttacker;
+                        if (attacker.AttackSignal && attacker.Recovery <= TimeSpan.Zero)
+                        {
+                            // Alle Items in der Nähe schlagen
+                            foreach (var attackable in attacker.AttackableItems)
+                            {
+                                attackable.Hitpoints -= attacker.AttackValue;
+                                if (attackable.OnHit != null)
+                                    attackable.OnHit(this, attacker, attackable);
                             }
 
-                            // Tile erstellen
-                            Tile tile = new Tile()
-                            {
-                                Texture = tileset.image,
-                                SourceRectangle = new Rectangle(x * width, y * width, width, width),
-                                Blocked = block
-                            };
-
-                            // In die Auflistung aufnehmen
-                            area.Tiles.Add(start + j, tile);
+                            // Schlagerholung anstoßen
+                            attacker.Recovery = attacker.TotalRecovery;
                         }
+                        attacker.AttackSignal = false;
                     }
-
-                    // Layer erstellen
-                    for (int l = 0; l < result.layers.Length; l++)
-                    {
-                        FileLayer layer = result.layers[l];
-
-                        for (int i = 0; i < layer.data.Length; i++)
-                        {
-                            int x = i % area.Width;
-                            int y = i / area.Width;
-                            area.Layers[l].Tiles[x, y] = layer.data[i];
-                        }
-                    }
-
-                    return area;
                 }
+            }
+
+            // Transfers durchführen
+            if (Mode != SimulationMode.Client)
+                foreach (var transfer in transfers)
+                    transfer();
+        }
+
+        /// <summary>
+        /// Setzt den Fortschritt des Quests.
+        /// </summary>
+        public void SetQuestProgress(string quest, string progress)
+        {
+            SetQuestProgress(quest, progress, QuestState.Active);
+        }
+
+        /// <summary>
+        /// Markiert das Quest als gescheitert.
+        /// </summary>
+        /// <param name="id">Identifier.</param>
+        public void SetQuestFail(string quest, string progress)
+        {
+            SetQuestProgress(quest, progress, QuestState.Failed);
+        }
+
+        /// <summary>
+        /// Markiert das Quest als erfolgreich beendet.
+        /// </summary>
+        public void SetQuestSuccess(string quest, string progress)
+        {
+            SetQuestProgress(quest, progress, QuestState.Succeeded);
+        }
+            
+        private void SetQuestProgress(string quest, string progress, QuestState state)
+        {
+            if (Mode != SimulationMode.Client)
+            {
+                var qu = World.Quests.SingleOrDefault(q => q.Name == quest);
+                qu.CurrentProgress = qu.QuestProgresses.FirstOrDefault(q => q.Id.Equals(progress));
+                qu.State = state;
+            }
+            else
+            {
+                // Zum Server schicken
+                game.Client.SendQuestUpdate(quest, progress, state);
             }
         }
 
         /// <summary>
-        /// Root Objekt der Area-Datei.
+        /// Zeigt einen Interaktionsdialog an.
         /// </summary>
-        private class FileArea
+        public void ShowInteractionScreen(Player player, Screen screen)
         {
-            /// <summary>
-            /// Hintergrundfarbe der Karte als Hexcode
-            /// </summary>
-            public string backgroundcolor { get; set; }
-
-            /// <summary>
-            /// Abzahl Zellen in der Breite
-            /// </summary>
-            public int width { get; set; }
-
-            /// <summary>
-            /// Anzahl Zellen in der Höhe
-            /// </summary>
-            public int height { get; set; }
-
-            /// <summary>
-            /// Auflistung der Layer.
-            /// </summary>
-            public FileLayer[] layers { get; set; }
-
-            /// <summary>
-            /// Auflistung der Tilesets.
-            /// </summary>
-            public FileTileset[] tilesets { get; set; }
+            if (player == game.Local.Player)
+            {
+                game.Screen.ShowScreen(screen);
+            }
         }
 
         /// <summary>
-        /// Layerdaten
+        /// Transferiert ein Item von einem Inventar zum anderen.
         /// </summary>
-        private class FileLayer
+        /// <param name="item">Betroffenes item</param>
+        /// <param name="sender">Sender</param>
+        /// <param name="receiver">Empfänger</param>
+        public void Transfer(Item item, IInventory sender, IInventory receiver)
         {
-            /// <summary>
-            /// Fortlaufende Index-Liste der Tiles.
-            /// </summary>
-            public int[] data { get; set; }
-        }
+            if (Mode != SimulationMode.Client)
+            {
+                // entfernen, falls vorhanden
+                if (sender != null && sender.Inventory.Contains(item))
+                    sender.Inventory.Remove(item);
 
-        /// <summary>
-        /// Tilesetdaten
-        /// </summary>
-        private class FileTileset
-        {
-            /// <summary>
-            /// Erste Id der enthaltenen Tiles.
-            /// </summary>
-            public int firstgid { get; set; }
-
-            /// <summary>
-            /// Name der Textur.
-            /// </summary>
-            public string image { get; set; }
-
-            /// <summary>
-            /// Breite eines einzelnen Tiles.
-            /// </summary>
-            public int tilewidth { get; set; }
-
-            /// <summary>
-            /// Breite des Bildes.
-            /// </summary>
-            public int imagewidth { get; set; }
-
-            /// <summary>
-            /// Anzahl enthaltener Tiles.
-            /// </summary>
-            public int tilecount { get; set; }
-
-            /// <summary>
-            /// Auflistung zusätzlicher Properties von Tiles.
-            /// </summary>
-            public Dictionary<int, FileTileProperty> tileproperties { get; set; }
-        }
-
-        /// <summary>
-        /// Zusätzliche "Custom Properties"
-        /// </summary>
-        public class FileTileProperty
-        {
-            /// <summary>
-            /// Gibt an ob das Tile den Spieler blockiert
-            /// </summary>
-            public bool Block { get; set; }
+                // Einfügen, falls noch nicht vorhanden
+                if (receiver != null && !receiver.Inventory.Contains(item))
+                    receiver.Inventory.Add(item);
+            }
+            else
+            {
+                // Zum Server schicken
+                game.Client.SendItemTransfer(item, sender, receiver);
+            }
         }
     }
+
+    /// <summary>
+    /// Liste von Modi in denen die Simulation laufen kann.
+    /// </summary>
+    internal enum SimulationMode
+    {
+        /// <summary>
+        /// Simulation ist nicht aktiv.
+        /// </summary>
+        None,
+
+        /// <summary>
+        /// Singleplayer Mode
+        /// </summary>
+        Single,
+
+        /// <summary>
+        /// Server Modus
+        /// </summary>
+        Server,
+
+        /// <summary>
+        /// Multiplayer Client
+        /// </summary>
+        Client
+    }
 }
+

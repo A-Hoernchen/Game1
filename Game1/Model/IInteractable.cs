@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Game1.Components;
 
 namespace Game1.Model
 {
@@ -11,5 +8,10 @@ namespace Game1.Model
     /// </summary>
     internal interface IInteractable
     {
+        /// <summary>
+        /// Delegat für aktiven Interaktionsversuch des Spielers.
+        /// </summary>
+        Action<SimulationComponent, IInteractor, IInteractable> OnInteract { get; }
     }
 }
+
