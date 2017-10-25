@@ -24,9 +24,9 @@ namespace Game1.Controls
             foreach (var item in Items.Where(i => i.Visible))
             {
                 // Style des aktuellen Elementes ermitteln
-                NineTileRenderer renderer = Manager.Button;
+                NineTileRenderer renderer = Manager.Small_Panel7;
                 float alpha = (item.Enabled ? 1f : 0.3f);
-                if (item.Equals(SelectedItem)) renderer = Manager.ButtonHovered;
+                if (item.Equals(SelectedItem)) renderer = Manager.Small_Panel6;
 
                 // Hintergrund rendern
                 renderer.Draw(spriteBatch, new Rectangle(x, y, Position.Width, 50), alpha);

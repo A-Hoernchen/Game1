@@ -9,6 +9,7 @@ using Game1.Screens;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Configuration;
+using System.Net;
 
 namespace Game1.Components
 {
@@ -308,10 +309,11 @@ namespace Game1.Components
         public void Connect()
         {
             string server = ConfigurationManager.AppSettings["Server"];
-
+            string test = Dns.GetHostName();
             client = new TcpClient();
             client.BeginConnect(server ?? "localhost", 1201, ConnectCallback, null);
             State = ClientState.Connecting;
+            
         }
 
         /// <summary>

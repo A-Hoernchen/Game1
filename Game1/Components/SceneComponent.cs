@@ -145,7 +145,8 @@ namespace Game1.Components
             // Bildschirm leeren
             GraphicsDevice.Clear(currentArea.Background);
 
-            spriteBatch.Begin();
+            //spriteBatch.Begin();
+            spriteBatch.Begin(samplerState: SamplerState.PointClamp);
 
             // Berechnet den Render-Offset mit Hilfe der Kamera-Einstellungen
             Point offset = (Camera.Offset * Camera.Scale).ToPoint();

@@ -24,7 +24,7 @@ namespace Game1.Controls
             foreach (var item in Items.Where(i => i.Visible))
             {
                 // Hintergrund rendern
-                Manager.Button.Draw(spriteBatch, new Rectangle(x, y, Position.Width, 50));
+                Manager.Small_Panel1.Draw(spriteBatch, new Rectangle(x, y, Position.Width, 50));
 
                 // Icon rendern
                 if (!string.IsNullOrEmpty(item.Icon))

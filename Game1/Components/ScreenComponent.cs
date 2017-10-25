@@ -45,6 +45,24 @@ namespace Game1.Components
         /// </summary>
         public NineTileRenderer Panel { get; private set; }
 
+        public NineTileRenderer Bolt_Panel1 { get; private set; }
+        public NineTileRenderer Bolt_Panel2 { get; private set; }
+        public NineTileRenderer Bolt_Panel3 { get; private set; }
+        public NineTileRenderer Bolt_Panel4 { get; private set; }
+        public NineTileRenderer Bolt_Panel5 { get; private set; }
+        public NineTileRenderer Bolt_Panel6 { get; private set; }
+        public NineTileRenderer Bolt_Panel7 { get; private set; }
+        public NineTileRenderer Bolt_Panel8 { get; private set; }
+
+        public NineTileRenderer Small_Panel1 { get; private set; }
+        public NineTileRenderer Small_Panel2 { get; private set; }
+        public NineTileRenderer Small_Panel3 { get; private set; }
+        public NineTileRenderer Small_Panel4 { get; private set; }
+        public NineTileRenderer Small_Panel5 { get; private set; }
+        public NineTileRenderer Small_Panel6 { get; private set; }
+        public NineTileRenderer Small_Panel7 { get; private set; }
+        public NineTileRenderer Small_Panel8 { get; private set; }
+
         /// <summary>
         /// Standard Hintergrund für Buttons
         /// </summary>
@@ -122,11 +140,35 @@ namespace Game1.Components
             Font = Game.Content.Load<SpriteFont>("HudFont");
 
             // Hintergründe laden
-            Texture2D texture = Game.Content.Load<Texture2D>("ui");
+            Texture2D texture;
+
+            texture = Game.Content.Load<Texture2D>("ui_elements\\ui_theme");
+            Bolt_Panel1 = new NineTileRenderer(texture, new Rectangle(0, 288, 512, 128), new Point(30, 30));
+            Bolt_Panel2 = new NineTileRenderer(texture, new Rectangle(0, 432, 512, 128), new Point(30, 30));
+            Bolt_Panel3 = new NineTileRenderer(texture, new Rectangle(0, 576, 512, 128), new Point(30, 30));
+            Bolt_Panel4 = new NineTileRenderer(texture, new Rectangle(0, 720, 512, 128), new Point(30, 30));
+
+            Bolt_Panel5 = new NineTileRenderer(texture, new Rectangle(800, 288, 512, 128), new Point(30, 30));
+            Bolt_Panel6 = new NineTileRenderer(texture, new Rectangle(800, 432, 512, 128), new Point(30, 30));
+            Bolt_Panel7 = new NineTileRenderer(texture, new Rectangle(800, 576, 512, 128), new Point(30, 30));
+            Bolt_Panel8 = new NineTileRenderer(texture, new Rectangle(800, 720, 512, 128), new Point(30, 30));
+
+            Small_Panel1 = new NineTileRenderer(texture, new Rectangle(528, 544, 256, 64), new Point(15, 15));
+            Small_Panel2 = new NineTileRenderer(texture, new Rectangle(528, 624, 256, 64), new Point(15, 15));
+            Small_Panel3 = new NineTileRenderer(texture, new Rectangle(528, 704, 256, 64), new Point(15, 15));
+            Small_Panel4 = new NineTileRenderer(texture, new Rectangle(528, 784, 256, 64), new Point(15, 15));
+
+            Small_Panel5 = new NineTileRenderer(texture, new Rectangle(1328, 544, 256, 64), new Point(15, 15));
+            Small_Panel6 = new NineTileRenderer(texture, new Rectangle(1328, 624, 256, 64), new Point(15, 15));
+            Small_Panel7 = new NineTileRenderer(texture, new Rectangle(1328, 704, 256, 64), new Point(15, 15));
+            Small_Panel8 = new NineTileRenderer(texture, new Rectangle(1328, 784, 256, 64), new Point(15, 15));
+
+            texture = Game.Content.Load<Texture2D>("ui");
             Panel = new NineTileRenderer(texture, new Rectangle(190, 100, 100, 100), new Point(30, 30));
             Border = new NineTileRenderer(texture, new Rectangle(283, 200, 93, 94), new Point(30, 30));
             Button = new NineTileRenderer(texture, new Rectangle(0, 282, 190, 49), new Point(10, 10));
             ButtonHovered = new NineTileRenderer(texture, new Rectangle(0, 143, 190, 45), new Point(10, 10));
+            
 
             // Arrow
             Rectangle source = new Rectangle(325, 486, 22, 21);

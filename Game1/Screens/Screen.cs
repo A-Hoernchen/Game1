@@ -56,7 +56,7 @@ namespace Game1.Screens
 
         public void Draw(GameTime gameTime, SpriteBatch batch)
         {
-            Manager.Panel.Draw(batch, Position);
+            Manager.Small_Panel8.Draw(batch, Position);
             foreach (var control in Controls)
                 control.Draw(batch, Position.Location);
         }

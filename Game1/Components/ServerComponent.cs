@@ -68,7 +68,7 @@ namespace Game1.Components
         /// <summary>
         /// Gibt an ob der Server überhaupt gestartet werden kann.
         /// </summary>
-        public bool ServerFeatureAvailable { get { return false; } }
+        public bool ServerFeatureAvailable { get { return true; } }
 
         public ServerComponent(Game1 game)
             : base(game)

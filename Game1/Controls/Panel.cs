@@ -17,7 +17,7 @@ namespace Game1.Controls
 
         public override void Draw(SpriteBatch spriteBatch, Point offset)
         {
-            Manager.Border.Draw(spriteBatch, 
+            Manager.Small_Panel6.Draw(spriteBatch, 
                 new Rectangle(
                     Position.X + offset.X, 
                     Position.Y + offset.Y, 

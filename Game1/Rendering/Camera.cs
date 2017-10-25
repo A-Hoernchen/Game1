@@ -44,7 +44,7 @@ namespace Game1.Rendering
         public Camera(Point viewSize)
         {
             viewSizeHalf = new Vector2(viewSize.X / 2f, viewSize.Y / 2f);
-            Scale = 64f;
+            Scale = 32f;
             Border = 150;
         }
 
